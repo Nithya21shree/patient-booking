@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Hospital Booking - Sector</title>
+
+<style>
+body{
+    margin:0;
+    font-family:Segoe UI, Arial;
+    background: linear-gradient(135deg,#fef9c3,#e0f2fe);
+}
+.container{
+    max-width:900px;
+    margin:30px auto;
+    padding:20px;
+}
+h1{ text-align:center; margin-bottom:20px; }
+
+.section{ display:none; }
+.section.active{ display:block; }
+
+.grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(200px,1fr));
+    gap:15px;
+}
+.card{
+    background:white;
+    border-radius:14px;
+    padding:15px;
+    box-shadow:0 8px 20px rgba(0,0,0,.1);
+    text-align:center;
+}
+.card h3{ margin:0 0 10px 0; }
+.card button{
+    padding:8px 12px;
+    border:none;
+    border-radius:6px;
+    background:#2563eb;
+    color:white;
+    cursor:pointer;
+}
+
+.booking-card{
+    background:#f9fafb;
+    border-radius:10px;
+    padding:10px;
+    margin-bottom:8px;
+}
+
+.nav-bar{
+    position:fixed;
+    bottom:0;
+    left:0;
+    right:0;
+    background:white;
+    display:flex;
+    justify-content:space-around;
+    padding:12px 0;
+    box-shadow:0 -4px 10px rgba(0,0,0,.1);
+    z-index:1000;
+}
+.nav-bar button{
+    background:none;
+    border:none;
+    font-size:28px;
+    cursor:pointer;
+}
+
+.chat-box{
+    position:fixed;
+    right:20px;
+    bottom:90px;
+    width:300px;
+    background:white;
+    border-radius:12px;
+    box-shadow:0 10px 30px rgba(0,0,0,.3);
+    display:none;
+    z-index:999;
+}
+.chat-header{
+    background:#2563eb;
+    color:white;
+    padding:10px;
+    text-align:center;
+}
+.chat-body{
+    padding:10px;
+    height:200px;
+    overflow-y:auto;
+}
+.chat-footer{
+    padding:10px;
+    display:flex;
+    gap:5px;
+}
+.chat-footer input{ flex:1; padding:6px; }
+.chat-footer button{
+    padding:6px;
+    border:none;
+    background:#2563eb;
+    color:white;
+    border-radius:6px;
+    cursor:pointer;
+}
+.user{ margin-bottom:6px; }
+.bot{ color:#2563eb; margin-bottom:6px; }
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<!-- 🌐 Language -->
+<div style="text-align:right;">
+<select onchange="changeLang(this.value)">
+<option value="en">English</option>
+<option value="ta">தமிழ்</option>
+</select>
+</div>
+
+<h1 id="title">Hospital Booking</h1>
+
+<div id="departments" class="section active">
+<h2 id="deptTitle">Select Department</h2>
+
+<div class="grid">
+
+<div class="card"><h3 id="cardiology">Cardiology</h3><button onclick="go('Cardiology')">View Hospitals</button></div>
+<div class="card"><h3 id="neurology">Neurology</h3><button onclick="go('Neurology')">View Hospitals</button></div>
+<div class="card"><h3 id="ortho">Orthopaedics</h3><button onclick="go('Orthopaedics')">View Hospitals</button></div>
+<div class="card"><h3 id="pediatrics">Pediatrics</h3><button onclick="go('Pediatrics')">View Hospitals</button></div>
+<div class="card"><h3 id="derma">Dermatology</h3><button onclick="go('Dermatology')">View Hospitals</button></div>
+<div class="card"><h3 id="general">General Medicine</h3><button onclick="go('General Medicine')">View Hospitals</button></div>
+<div class="card"><h3 id="ent">ENT</h3><button onclick="go('ENT')">View Hospitals</button></div>
+<div class="card"><h3 id="gyn">Gynecology</h3><button onclick="go('Gynecology')">View Hospitals</button></div>
+<div class="card"><h3 id="onco">Oncology</h3><button onclick="go('Oncology')">View Hospitals</button></div>
+<div class="card"><h3 id="emergency">Emergency</h3><button onclick="go('Emergency')">View Hospitals</button></div>
+<div class="card"><h3 id="ophthal">Ophthalmology</h3><button onclick="go('Ophthalmology')">View Hospitals</button></div>
+<div class="card"><h3 id="pulmo">Pulmonology</h3><button onclick="go('Pulmonology')">View Hospitals</button></div>
+<div class="card"><h3 id="gastro">Gastroenterology</h3><button onclick="go('Gastroenterology')">View Hospitals</button></div>
+<div class="card"><h3 id="uro">Urology</h3><button onclick="go('Urology')">View Hospitals</button></div>
+<div class="card"><h3 id="psych">Psychiatry</h3><button onclick="go('Psychiatry')">View Hospitals</button></div>
+<div class="card"><h3 id="obs">Obstetrics</h3><button onclick="go('Obstetrics')">View Hospitals</button></div>
+<div class="card"><h3 id="neo">Neonatology</h3><button onclick="go('Neonatology')">View Hospitals</button></div>
+<div class="card"><h3 id="dental">Dental Care</h3><button onclick="go('Dental Care')">View Hospitals</button></div>
+<div class="card"><h3 id="physio">Physiotherapy</h3><button onclick="go('Physiotherapy')">View Hospitals</button></div>
+
+</div>
+</div>
+
+<div id="tokens" class="section">
+<h2 id="currentBookingTitle">Current Booking</h2>
+<div id="currentToken" class="booking-card">No current booking.</div>
+<h2 id="pastBookingTitle">Past Bookings</h2>
+<div id="tokenFeed"></div>
+</div>
+
+</div>
+
+<div class="nav-bar">
+<button onclick="showSection('departments')">📚</button>
+<button onclick="showSection('tokens')">🎟</button>
+<button onclick="toggleChat()">💬</button>
+</div>
+
+<div class="chat-box" id="chatBox">
+<div class="chat-header">Ask Assistant</div>
+<div class="chat-body" id="chatBody"></div>
+<div class="chat-footer">
+<input type="text" id="chatInput">
+<button onclick="sendText()">➤</button>
+<button onclick="startVoice()">🎤</button>
+</div>
+</div>
+
+<script>
+
+function go(dep){
+window.location="hospital_fixed.html?department="+encodeURIComponent(dep);
+}
+
+function showSection(name){
+document.getElementById("departments").classList.remove("active");
+document.getElementById("tokens").classList.remove("active");
+document.getElementById(name).classList.add("active");
+if(name==="tokens"){ loadBookings(); }
+}
+
+function toggleChat(){
+let box=document.getElementById("chatBox");
+box.style.display=box.style.display==="block"?"none":"block";
+}
+
+function sendText(){
+let input=document.getElementById("chatInput");
+let text=input.value.trim();
+if(!text) return;
+processChat(text);
+input.value="";
+}
+
+function startVoice(){
+let rec=new webkitSpeechRecognition();
+rec.lang="en-IN";
+rec.start();
+rec.onresult=e=>processChat(e.results[0][0].transcript);
+}
+
+function loadBookings(){
+let bookings=JSON.parse(localStorage.getItem("bookings")||"[]");
+let feed=document.getElementById("tokenFeed");
+let current=document.getElementById("currentToken");
+
+if(bookings.length===0){
+current.innerHTML="No current booking.";
+feed.innerHTML="No past bookings.";
+return;
+}
+
+let latest=bookings[bookings.length-1];
+current.innerHTML=`<b>${latest.hospital}</b><br>${latest.dept}<br>${latest.date}<br>${latest.time}`;
+
+feed.innerHTML="";
+bookings.slice(0,-1).reverse().forEach(b=>{
+let div=document.createElement("div");
+div.className="booking-card";
+div.innerHTML=`<b>${b.hospital}</b><br>${b.dept}<br>${b.date}<br>${b.time}`;
+feed.appendChild(div);
+});
+}
+
+/* 🌐 TRANSLATION */
+const t={
+en:{
+title:"Hospital Booking",dept:"Select Department",
+cardiology:"Cardiology",neurology:"Neurology",ortho:"Orthopaedics",
+pediatrics:"Pediatrics",derma:"Dermatology",general:"General Medicine",
+ent:"ENT",gyn:"Gynecology",onco:"Oncology",emergency:"Emergency",
+ophthal:"Ophthalmology",pulmo:"Pulmonology",gastro:"Gastroenterology",
+uro:"Urology",psych:"Psychiatry",obs:"Obstetrics",
+neo:"Neonatology",dental:"Dental Care",physio:"Physiotherapy"
+},
+ta:{
+title:"மருத்துவமனை முன்பதிவு",dept:"துறையை தேர்வு செய்யவும்",
+cardiology:"இதய மருத்துவம்",neurology:"நரம்பியல்",ortho:"எலும்பியல்",
+pediatrics:"குழந்தை மருத்துவம்",derma:"தோல் மருத்துவம்",general:"பொது மருத்துவம்",
+ent:"காது மூக்கு தொண்டை",gyn:"பெண்கள் மருத்துவம்",onco:"புற்றுநோய்",
+emergency:"அவசர சிகிச்சை",ophthal:"கண் மருத்துவம்",pulmo:"மூச்சுக் குழாய்",
+gastro:"செரிமானம்",uro:"சிறுநீரகம்",psych:"மனநலம்",
+obs:"கர்ப்பம்",neo:"புதிய பிறப்பு",dental:"பல் மருத்துவம்",
+physio:"உடற்கல்வி சிகிச்சை"
+}
+};
+
+function changeLang(lang){
+localStorage.setItem("lang",lang);
+document.getElementById("title").innerText=t[lang].title;
+document.getElementById("deptTitle").innerText=t[lang].dept;
+
+for(let key in t[lang]){
+if(document.getElementById(key)){
+document.getElementById(key).innerText=t[lang][key];
+}
+}
+}
+
+window.onload=()=>{
+let lang=localStorage.getItem("lang")||"en";
+changeLang(lang);
+};
+
+</script>
+
+</body>
+</html>

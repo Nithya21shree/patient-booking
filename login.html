@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Hospital Login</title>
+
+<style>
+body{
+    margin:0;
+    height:100vh;
+    font-family:Segoe UI, Arial;
+    background:
+      linear-gradient(rgba(0,0,0,.45),rgba(0,0,0,.45)),
+      url("https://images.unsplash.com/photo-1586773860418-d37222d8fce3");
+    background-size:cover;
+    background-position:center;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+}
+
+.card{
+    width:360px;
+    background:white;
+    padding:25px;
+    border-radius:12px;
+    box-shadow:0 15px 35px rgba(0,0,0,.3);
+}
+
+h2{
+    text-align:center;
+    margin-top:0;
+}
+
+input{
+    width:100%;
+    padding:10px;
+    margin-top:10px;
+    border-radius:6px;
+    border:1px solid #ccc;
+}
+
+button{
+    width:100%;
+    padding:10px;
+    margin-top:15px;
+    background:#2563eb;
+    color:white;
+    border:none;
+    border-radius:6px;
+    cursor:pointer;
+}
+
+.hidden{ display:none; }
+
+.note{
+    font-size:13px;
+    color:green;
+    text-align:center;
+    margin-top:8px;
+}
+
+.error{
+    font-size:13px;
+    color:red;
+}
+</style>
+</head>
+
+<body>
+
+<div class="card">
+
+<h2>Patient Login</h2>
+
+<div id="form">
+
+<input id="name" placeholder="Full name">
+
+<input id="age" placeholder="Age">
+
+<input id="dob" type="date">
+
+<input id="email" placeholder="Email">
+<div id="emailError" class="error"></div>
+
+<input id="phone" placeholder="Phone number">
+<div id="phoneError" class="error"></div>
+
+<button onclick="sendOTP()">Login</button>
+
+</div>
+
+<div id="otpBox" class="hidden">
+
+<p style="text-align:center">Enter OTP sent to your phone</p>
+
+<input id="otpInput" placeholder="Enter OTP">
+
+<button onclick="verifyOTP()">Verify OTP</button>
+
+<p id="msg" class="note"></p>
+
+</div>
+
+</div>
+
+<script>
+
+let generatedOTP = "";
+
+function validateForm(){
+
+    let email = document.getElementById("email").value.trim();
+    let phone = document.getElementById("phone").value.trim();
+
+    let emailError = document.getElementById("emailError");
+    let phoneError = document.getElementById("phoneError");
+
+    emailError.innerText = "";
+    phoneError.innerText = "";
+
+    let valid = true;
+
+    // ✅ Email must end with @gmail.com
+    if(!email.endsWith("@gmail.com")){
+        emailError.innerText = "Email must end with @gmail.com";
+        valid = false;
+    }
+
+    // ✅ Phone must be exactly 10 digits
+    const phoneRegex = /^[0-9]{10}$/;
+
+    if(!phoneRegex.test(phone)){
+        phoneError.innerText = "Phone number must be exactly 10 digits";
+        valid = false;
+    }
+
+    return valid;
+}
+
+function sendOTP(){
+
+    if(!validateForm()){
+        return;
+    }
+
+    generatedOTP = Math.floor(100000 + Math.random()*900000).toString();
+
+    console.log("OTP (demo):", generatedOTP);
+
+    document.getElementById("form").classList.add("hidden");
+    document.getElementById("otpBox").classList.remove("hidden");
+
+    document.getElementById("msg").innerText =
+      "Demo OTP generated (check console)";
+}
+
+function verifyOTP(){
+
+    let o = document.getElementById("otpInput").value;
+
+    if(o === generatedOTP){
+
+        localStorage.setItem("userName",
+            document.getElementById("name").value);
+
+        window.location = "sector.html";
+    }
+    else{
+        alert("Invalid OTP");
+    }
+}
+
+</script>
+
+</body>
+</html>
