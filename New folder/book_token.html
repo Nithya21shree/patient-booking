@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Book Token</title>
+<style>
+body{
+  margin:0;
+  font-family: Arial, sans-serif;
+  background: linear-gradient(120deg,#e8f4ff,#fefae0);
+}
+.container{
+  max-width:500px;
+  margin:40px auto;
+  background:white;
+  padding:20px;
+  border-radius:14px;
+  box-shadow:0 10px 25px rgba(0,0,0,0.1);
+}
+h2{ margin-top:0; }
+.small{ color:#555; font-size:14px; margin:6px 0; }
+button{
+  width:100%; padding:12px; margin-top:12px;
+  border:none; border-radius:8px;
+  background:#2563eb; color:white; cursor:pointer;
+}
+button.close-btn{ background:#eee; color:#333; }
+.stars span {
+  font-size:24px; cursor:pointer; color:#ccc;
+}
+.stars span.active { color:#f5b301; }
+</style>
+</head>
+<body>
+
+<div class="container" id="tokenBox">
+  <h2 id="hospitalName">Hospital Name</h2>
+  <div class="small" id="hospitalAddress">Hospital Address</div>
+  <div class="small">Department: <span id="hospitalDept"></span></div>
+  <div class="small">Contact: <span id="hospitalContact"></span></div>
+  <div class="small">Already booked tokens: <b id="bookedCount">0</b></div>
+  <br>
+  <a id="mapLink" href="#" target="_blank">📍 See Directions from Your Location</a>
+  <button onclick="bookToken()">Book token</button>
+  <div style="margin-top:12px">
+    <span class="small">Rate this hospital:</span><br>
+    <div class="stars" id="stars">
+      <span onclick="highlightStars(this,1)">★</span>
+      <span onclick="highlightStars(this,2)">★</span>
+      <span onclick="highlightStars(this,3)">★</span>
+      <span onclick="highlightStars(this,4)">★</span>
+      <span onclick="highlightStars(this,5)">★</span>
+    </div>
+  </div>
+  <button class="close-btn" onclick="window.location='hospital_fixed.html'">Close</button>
+</div>
+
+<script>
+// Load hospital info from query string
+const params = new URLSearchParams(window.location.search);
+const hospital = params.get("hospital") || "Hospital Name";
+const address = params.get("address") || "Hospital Address";
+const department = params.get("department") || "Department";
+const contact = params.get("contact") || "Not available";
+
+document.getElementById("hospitalName").textContent = hospital;
+document.getElementById("hospitalAddress").textContent = address;
+document.getElementById("hospitalDept").textContent = department;
+document.getElementById("hospitalContact").textContent = contact;
+
+// Mock booked tokens count
+document.getElementById("bookedCount").textContent = Math.floor(1 + Math.random()*10);
+
+// Map link
+const lat = params.get("lat"), lon = params.get("lon");
+document.getElementById("mapLink").href = lat && lon
+  ? `https://www.google.com/maps/dir/?api=1&origin=My+Location&destination=${lat},${lon}`
+  : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
+
+// Book token
+function bookToken(){
+  const token = "T" + Math.floor(100 + Math.random()*900);
+  const bookingDate = new Date().toLocaleString();
+
+  // Save booking info for home page
+  localStorage.setItem("lastHospital", hospital);
+  localStorage.setItem("lastDept", department);
+  localStorage.setItem("lastToken", token);
+  localStorage.setItem("lastDate", bookingDate);
+
+  alert("✅ Token booked successfully!\nHospital: " + hospital +
+        "\nDepartment: " + department +
+        "\nToken: " + token +
+        "\nBooked On: " + bookingDate);
+}
+
+// Rating stars
+function highlightStars(el, rating){
+  const stars = document.querySelectorAll("#stars span");
+  stars.forEach((s,i)=> s.classList.toggle("active", i < rating));
+  alert("Thanks for rating! You gave " + rating + " stars.");
+}
+</script>
+
+</body>
+</html>

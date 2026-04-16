@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Hospital Booking Home</title>
+<style>
+body{
+    margin:0;
+    font-family:Segoe UI, Arial;
+    background: linear-gradient(135deg,#e0f2fe,#fef9c3);
+}
+.container{
+    max-width:900px;
+    margin:30px auto;
+    padding:20px;
+}
+h1{ text-align:center; margin-bottom:20px; }
+
+/* Sections */
+.section{ display:none; }
+.section.active{ display:block; }
+
+/* Department grid */
+.grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(200px,1fr));
+    gap:15px;
+}
+.card{
+    background:white;
+    border-radius:14px;
+    padding:15px;
+    box-shadow:0 8px 20px rgba(0,0,0,.1);
+    text-align:center;
+}
+.card h3{ margin:0 0 10px 0; }
+.card button{
+    padding:8px 12px;
+    border:none;
+    border-radius:6px;
+    background:#2563eb;
+    color:white;
+    cursor:pointer;
+}
+
+/* Booking cards */
+.booking-card{
+    background:#f9fafb;
+    border-radius:10px;
+    padding:10px;
+    margin-bottom:8px;
+    box-shadow:0 4px 10px rgba(0,0,0,.05);
+}
+.booking-card small{ color:#555; }
+
+/* Bottom nav bar */
+.nav-bar{
+    position:fixed; bottom:0; left:0; right:0;
+    background:white;
+    display:flex; justify-content:space-around;
+    padding:12px 0;
+    box-shadow:0 -4px 10px rgba(0,0,0,.1);
+}
+.nav-bar button{
+    background:none; border:none;
+    font-size:32px;
+    cursor:pointer;
+}
+
+/* Chat box */
+.chat-box{
+    position:fixed; right:20px; bottom:90px;
+    width:300px; background:white; border-radius:12px;
+    box-shadow:0 10px 30px rgba(0,0,0,.3);
+    display:none; overflow:hidden;
+}
+.chat-header{ background:#2563eb; color:white; padding:10px; text-align:center; font-weight:600; }
+.chat-body{ padding:10px; font-size:14px; height:180px; overflow-y:auto; }
+.chat-footer{ padding:10px; }
+.chat-footer button{ width:100%; padding:8px; border:none; background:#2563eb; color:white; border-radius:6px; cursor:pointer; }
+.user{ color:#111; margin-bottom:6px; }
+.bot{ color:#2563eb; margin-bottom:6px; }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h1>Hospital Booking</h1>
+
+  <!-- Department Section -->
+  <div id="departments" class="section active">
+    <h2>Select Department</h2>
+    <div class="grid">
+      <!-- Department cards -->
+      <div class="card"><h3>Cardiology</h3><button onclick="go('Cardiology')">View Hospitals</button></div>
+      <div class="card"><h3>Neurology</h3><button onclick="go('Neurology')">View Hospitals</button></div>
+      <div class="card"><h3>Orthopaedics</h3><button onclick="go('Orthopaedics')">View Hospitals</button></div>
+      <div class="card"><h3>Pediatrics</h3><button onclick="go('Pediatrics')">View Hospitals</button></div>
+      <div class="card"><h3>Dermatology</h3><button onclick="go('Dermatology')">View Hospitals</button></div>
+      <div class="card"><h3>General Medicine</h3><button onclick="go('General Medicine')">View Hospitals</button></div>
+      <div class="card"><h3>ENT</h3><button onclick="go('ENT')">View Hospitals</button></div>
+      <div class="card"><h3>Gynecology</h3><button onclick="go('Gynecology')">View Hospitals</button></div>
+      <div class="card"><h3>Oncology</h3><button onclick="go('Oncology')">View Hospitals</button></div>
+      <div class="card"><h3>Emergency</h3><button onclick="go('Emergency')">View Hospitals</button></div>
+      <div class="card"><h3>Ophthalmology</h3><button onclick="go('Ophthalmology')">View Hospitals</button></div>
+      <div class="card"><h3>Pulmonology</h3><button onclick="go('Pulmonology')">View Hospitals</button></div>
+      <div class="card"><h3>Gastroenterology</h3><button onclick="go('Gastroenterology')">View Hospitals</button></div>
+      <div class="card"><h3>Urology</h3><button onclick="go('Urology')">View Hospitals</button></div>
+      <div class="card"><h3>Psychiatry</h3><button onclick="go('Psychiatry')">View Hospitals</button></div>
+      <div class="card"><h3>Obstetrics</h3><button onclick="go('Obstetrics')">View Hospitals</button></div>
+      <div class="card"><h3>Neonatology</h3><button onclick="go('Neonatology')">View Hospitals</button></div>
+      <div class="card"><h3>Dental Care</h3><button onclick="go('Dental Care')">View Hospitals</button></div>
+      <div class="card"><h3>Physician</h3><button onclick="go('Physician')">View Hospitals</button></div>
+    </div>
+  </div>
+
+  <!-- History Section -->
+  <div id="history" class="section">
+    <h2>Last Booking</h2>
+    <div id="lastBooking" class="booking-card">No bookings yet.</div>
+    <h2>Recent Bookings</h2>
+    <div id="bookingFeed"></div>
+  </div>
+</div>
+
+<!-- Bottom Navigation -->
+<div class="nav-bar">
+  <button onclick="showSection('departments')">📚</button>
+  <button onclick="showSection('history')">🏥</button>
+  <button onclick="toggleChat()">💬</button>
+</div>
+
+<!-- Chat Assistant -->
+<div class="chat-box" id="chatBox">
+  <div class="chat-header">Ask Assistant</div>
+  <div class="chat-body" id="chatBody"></div>
+  <div class="chat-footer"><button onclick="startVoice()">🎤 Speak</button></div>
+</div>
+
+
+<script>
+function go(dep){
+    window.location = "hospital_fixed.html?department=" + encodeURIComponent(dep);
+}
+
+/* Section switching */
+function showSection(name){
+  document.getElementById("departments").classList.remove("active");
+  document.getElementById("history").classList.remove("active");
+  document.getElementById(name).classList.add("active");
+}
+
+/* Last booking */
+const lastHospital = localStorage.getItem("lastHospital");
+const lastDept = localStorage.getItem("lastDept");
+const lastToken = localStorage.getItem("lastToken");
+const lastDate = localStorage.getItem("lastDate");
+
+if(lastHospital){
+  document.getElementById("lastBooking").innerHTML = `
+    <b>${lastHospital}</b> (${lastDept})<br>
+    Token: ${lastToken}<br>
+    <small>Booked On: ${lastDate}</small>
+  
+}
+
+/* Recent bookings feed */
+let bookings = JSON.parse(localStorage.getItem("bookings") || "[]");
+const feed = document.getElementById("bookingFeed");
+if(bookings.length === 0){
+  feed.innerHTML = "<div class='booking-card'>No past bookings.</div>";
+} else {
+  bookings.forEach(b=>{
+    let div=document.createElement("div");
+    div.className="booking-card";
+    div.innerHTML = `<b>${b.hospital}</b> (${b.dept}) - Token ${b.token}<br><small>${b.date}</small>`;
+    feed.appendChild(div);
+  });
+}
+
+/* Chat assistant symptom mapping */
+const symptomToDept = {
+  "knee pain": "Orthopaedics","bone pain": "Orthopaedics","joint pain": "Orthopaedics","back pain": "Orthopaedics","fracture": "Orthopaedics",
+  "chest pain": "Cardiology","heart pain": "Cardiology","palpitations": "Cardiology",
+  "headache": "Neurology","migraine": "Neurology","dizziness": "Neurology","seizure": "Neurology","stroke": "Neurology",
+  "cough": "Pulmonology","breathless": "Pulmonology","asthma": "Pulmonology","lung pain": "Pulmonology",
+  "skin rash": "Dermatology","itching": "Dermatology","acne": "Dermatology","eczema": "Dermatology",
+  "eye pain": "Ophthalmology","blurred vision": "Ophthalmology","red eyes": "Ophthalmology",
+  "stomach pain": "Gastroenterology","indigestion": "Gastroenterology","diarrhea": "Gastroenterology","constipation": "Gastroenterology",
+  "ear pain": "ENT","throat pain": "ENT","hearing loss": "ENT","tonsils": "ENT",
+  "child fever": "Pediatrics","baby cough": "Pediatrics",
+  "pregnancy": "Obstetrics","menstrual pain": "Gynecology","women health": "Gynecology",
+  "tumor": "Oncology","cancer": "Oncology",
+  "urine pain": "Urology","kidney stone": "Urology",
+  "depression": "Psychiatry","anxiety": "Psychiatry","mental health": "Psychiatry",
+  "tooth pain": "Dental Care","cavity": "Dental Care",
+  "newborn care": "Neonatology",
+  "accident": "Emergency","bleeding": "Emergency",
+  "fever": "General Medicine","weakness": "General Medicine","cold": "General Medicine"
+};
+
+/* Chat toggle */
+function toggleChat(){
+    const box = document.getElementById("chatBox");
+    box.style.display = (box.style.display === "block") ? "none" : "block";
+}
+
+/* Voice recognition */
+function startVoice(){
+  if(!('webkitSpeechRecognition' in window)){ 
+      alert("Voice recognition only works in Chrome. Please try Chrome browser.");
+      return; 
+  }
+  let rec = new webkitSpeechRecognition(); 
+  rec.lang = "en-IN"; 
+  rec.continuous = false; 
+  rec.interimResults = false; 
+  rec.start();
+
+  rec.onresult = function(e){ 
+      let text = e.results[0][0].transcript; 
+      askAI(text); 
+  };
+
+  rec.onerror = function(e){
+      alert("Voice recognition error: " + e.error);
+  };
+}
+
+/* Chat assistant logic */
+function askAI(text){
+  const chatBody = document.getElementById("chatBody");
+  chatBody.innerHTML += `<div class='user'>You: ${text}</div>`;
+  let dept = null;
+  for(let key in symptomToDept){
+    if(text.toLowerCase().includes(key)){
+      dept = symptomToDept[key];
+      break;
+    }
+  }
+  if(dept){
+    chatBody.innerHTML += `<div class='bot'>Assistant: You may need ${dept}. Redirecting...</div>`;
+    go(dept);
+  } else {
+    chatBody.innerHTML += `<div class='bot'>Assistant: Sorry, I couldn't map that symptom. Please select manually.</div>`;
+  }
+  chatBody.scrollTop = chatBody.scrollHeight;
+}
+</script>

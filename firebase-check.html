@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Firestore Connection Check</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f5f7fc; color: #111; padding: 24px; }
+    h1 { margin-top: 0; }
+    button { padding: 12px 18px; border: none; border-radius: 10px; background: #2563eb; color: white; cursor: pointer; }
+    button:disabled { background: #94a3b8; }
+    pre { background: #fff; border: 1px solid #d1d5db; padding: 16px; border-radius: 12px; margin-top: 16px; overflow-x: auto; }
+    .status { margin-top: 16px; font-size: 15px; }
+  </style>
+</head>
+<body>
+  <h1>Firestore Connection Check</h1>
+  <p>This page reads documents from your Firestore collections and confirms whether Firebase is configured correctly.</p>
+  <button id="checkButton">Check Firestore</button>
+  <div class="status" id="status">Status: ready</div>
+  <pre id="output">Output will appear here.</pre>
+
+  <script src="/config.js"></script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
+    import { getFirestore, collection, getDocs, limit, query } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
+
+    const firebaseConfig = window.firebaseConfig;
+      apiKey: "AIzaSyD82vHQyaLHN2M2BUB7BF2sew_qRcHyBbk",
+      authDomain: "hospital-1739a.firebaseapp.com",
+      projectId: "hospital-1739a",
+      storageBucket: "hospital-1739a.firebasestorage.app",
+      messagingSenderId: "23652913355",
+      appId: "1:23652913355:web:336020b380b4a9b387cb4e",
+      measurementId: "G-3SHW4MC27C"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const statusEl = document.getElementById('status');
+    const outputEl = document.getElementById('output');
+    const checkButton = document.getElementById('checkButton');
+
+    async function checkCollection(name) {
+      const colRef = collection(db, name);
+      const q = query(colRef, limit(3));
+      const snapshot = await getDocs(q);
+      const docs = [];
+      snapshot.forEach(doc => docs.push({ id: doc.id, data: doc.data() }));
+      return { count: snapshot.size, examples: docs };
+    }
+
+    checkButton.addEventListener('click', async () => {
+      checkButton.disabled = true;
+      statusEl.textContent = 'Status: checking Firestore...';
+      outputEl.textContent = '';
+
+      try {
+        const hospitals = await checkCollection('hospitals');
+        const bookings = await checkCollection('bookings');
+        const ratings = await checkCollection('ratings');
+
+        statusEl.textContent = 'Status: Firestore read succeeded.';
+        outputEl.textContent = JSON.stringify({ hospitals, bookings, ratings }, null, 2);
+      } catch (error) {
+        statusEl.textContent = 'Status: error reading Firestore.';
+        outputEl.textContent = error.toString();
+        console.error(error);
+      } finally {
+        checkButton.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>

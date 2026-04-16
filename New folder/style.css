@@ -1,0 +1,172 @@
+body{
+    margin:0;
+    font-family:Segoe UI,Arial;
+    background:linear-gradient(120deg,#eef5ff,#f7fff0);
+}
+
+/* main container */
+.container{
+    max-width:900px;
+    margin:auto;
+    padding:30px 15px;
+}
+
+/* heading */
+h1,h2{
+    text-align:center;
+    margin-top:10px;
+}
+
+/* main card (login / forms etc) */
+.card{
+    width:100%;
+    max-width:720px;
+    margin:18px auto;
+    background:white;
+    border-radius:14px;
+    padding:22px;
+    box-shadow:0 10px 30px rgba(0,0,0,.08);
+    cursor:pointer;
+    transition:transform .15s ease, box-shadow .15s ease;
+}
+
+.card:hover{
+    transform:translateY(-2px);
+    box-shadow:0 14px 35px rgba(0,0,0,.12);
+}
+
+/* hospital title */
+.card h3{
+    margin:0;
+}
+
+/* inputs & buttons */
+
+input,button,select{
+    width:100%;
+    padding:12px;
+    margin-top:10px;
+    border-radius:8px;
+    border:1px solid #ddd;
+    outline:none;
+    font-size:15px;
+}
+
+button{
+    background:#2563eb;
+    color:white;
+    border:none;
+    cursor:pointer;
+}
+
+button:hover{
+    background:#1d4ed8;
+}
+
+/* small text */
+.small{
+    font-size:13px;
+    color:#666;
+}
+
+/* list item layout */
+.list-item{
+    border:1px solid #eee;
+    padding:12px;
+    border-radius:10px;
+    margin-top:10px;
+}
+
+/* row */
+.row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+
+/* small button */
+.btn-sm{
+    width:auto;
+    padding:6px 12px;
+    font-size:13px;
+}
+
+/* center text */
+.center{
+    text-align:center;
+}
+
+/* distance badge */
+.badge{
+    display:inline-block;
+    background:#2563eb;
+    color:white;
+    font-size:13px;
+    padding:6px 12px;
+    border-radius:999px;
+    margin-top:8px;
+}
+
+/* travel time text */
+.time{
+    color:#444;
+    font-size:14px;
+}
+
+/* ----------------------------
+   POPUP / MODAL
+-----------------------------*/
+
+.modal{
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.4);
+    z-index:999;
+    justify-content:center;
+    align-items:center;
+}
+
+.modal-content{
+    background:white;
+    padding:22px;
+    border-radius:14px;
+    width:380px;
+    max-width:92%;
+    box-shadow:0 15px 40px rgba(0,0,0,.25);
+}
+
+#closeModal{
+    float:right;
+    font-size:22px;
+    cursor:pointer;
+    color:#555;
+}
+
+#closeModal:hover{
+    color:black;
+}
+
+.modal-content h3{
+    margin-top:5px;
+}
+
+/* qr image */
+#qrBox img{
+    display:block;
+    margin:10px auto;
+}
+
+/* book status */
+#bookStatus{
+    margin-top:10px;
+    font-weight:600;
+}
+
+/* responsive */
+@media(max-width:600px){
+    .card{
+        margin:14px auto;
+        padding:18px;
+    }
+}

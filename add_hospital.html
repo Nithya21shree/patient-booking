@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Add Hospital Data</title>
+  <style>
+    body { margin:0; font-family: Arial, sans-serif; background: #f2f7fb; color:#111; }
+    .page { max-width: 600px; margin: 40px auto; padding: 24px; background: white; border-radius: 16px; box-shadow: 0 18px 40px rgba(15,23,42,.08); }
+    h1 { margin-top: 0; font-size: 28px; }
+    label { display:block; margin:16px 0 6px; font-weight:600; }
+    input, select, textarea { width:100%; padding:10px 12px; border:1px solid #ccd6ea; border-radius:10px; font-size:15px; }
+    textarea { resize: vertical; min-height: 100px; }
+    button { margin-top: 20px; width:100%; padding:12px; border:none; border-radius:10px; background:#2563eb; color:white; font-size:16px; cursor:pointer; }
+    .status { margin-top:20px; font-size:15px; }
+    .note { color:#555; font-size:14px; margin-top:6px; }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <h1>Add Hospital</h1>
+    <p class="note">Enter hospital details below to save them to Firestore.</p>
+
+    <label for="name">Hospital Name</label>
+    <input id="name" placeholder="City Hospital" />
+
+    <label for="address">Address</label>
+    <textarea id="address" placeholder="123 Main Street, City"></textarea>
+
+    <label for="department">Department</label>
+    <select id="department">
+      <option value="Cardiology">Cardiology</option>
+      <option value="Neurology">Neurology</option>
+      <option value="Orthopaedics">Orthopaedics</option>
+      <option value="Pediatrics">Pediatrics</option>
+      <option value="Emergency">Emergency</option>
+      <option value="ENT">ENT</option>
+      <option value="Dermatology">Dermatology</option>
+      <option value="Oncology">Oncology</option>
+      <option value="Gynaecology">Gynaecology</option>
+      <option value="General Medicine">General Medicine</option>
+      <option value="Ophthalmology">Ophthalmology</option>
+      <option value="Pulmonology">Pulmonology</option>
+      <option value="Gastroenterology">Gastroenterology</option>
+      <option value="Urology">Urology</option>
+      <option value="Psychiatry">Psychiatry</option>
+      <option value="Obstetrics">Obstetrics</option>
+      <option value="Neonatology">Neonatology</option>
+      <option value="Dental Care">Dental Care</option>
+      <option value="Physician">Physician</option>
+    </select>
+
+    <label for="contact">Contact Number</label>
+    <input id="contact" placeholder="9876543210" />
+
+    <label for="lat">Latitude</label>
+    <input id="lat" placeholder="12.9716" />
+
+    <label for="lon">Longitude</label>
+    <input id="lon" placeholder="77.5946" />
+
+    <label for="notes">Notes</label>
+    <textarea id="notes" placeholder="Any additional hospital notes or highlights"></textarea>
+
+    <button id="saveButton" onclick="saveHospital()">Save Hospital</button>
+
+    <div id="status" class="status">Status: ready</div>
+  </div>
+
+  <script src="/config.js"></script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
+
+    const firebaseConfig = window.firebaseConfig;
+      apiKey: "AIzaSyD82vHQyaLHN2M2BUB7BF2sew_qRcHyBbk",
+      authDomain: "hospital-1739a.firebaseapp.com",
+      projectId: "hospital-1739a",
+      storageBucket: "hospital-1739a.firebasestorage.app",
+      messagingSenderId: "23652913355",
+      appId: "1:23652913355:web:336020b380b4a9b387cb4e",
+      measurementId: "G-3SHW4MC27C"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const statusEl = document.getElementById('status');
+    const saveButton = document.getElementById('saveButton');
+
+    async function saveHospital() {
+      const name = document.getElementById('name').value.trim();
+      const address = document.getElementById('address').value.trim();
+      const department = document.getElementById('department').value;
+      const contact = document.getElementById('contact').value.trim();
+      const lat = document.getElementById('lat').value.trim();
+      const lon = document.getElementById('lon').value.trim();
+      const notes = document.getElementById('notes').value.trim();
+
+      if (!name || !address || !contact) {
+        statusEl.textContent = 'Status: name, address and contact are required.';
+        return;
+      }
+
+      saveButton.disabled = true;
+      statusEl.textContent = 'Status: saving...';
+
+      try {
+        const hospital = {
+          name,
+          address,
+          department,
+          contact,
+          notes,
+          latitude: lat ? parseFloat(lat) : null,
+          longitude: lon ? parseFloat(lon) : null,
+          ratingAverage: 0,
+          ratingCount: 0,
+          createdAt: serverTimestamp()
+        };
+
+        const docRef = await addDoc(collection(db, 'hospitals'), hospital);
+        statusEl.textContent = `Status: saved with id ${docRef.id}`;
+        saveButton.disabled = false;
+      } catch (error) {
+        console.error(error);
+        statusEl.textContent = 'Status: error saving hospital. Check console.';
+        saveButton.disabled = false;
+      }
+    }
+
+    window.saveHospital = saveHospital;
+  </script>
+</body>
+</html>

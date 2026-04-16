@@ -102,132 +102,181 @@ h1{
 
 <button class="back-btn" onclick="window.location='sector.html'">⬅ Back to Department Selection</button>
 
-<script>
-// Read department from query string
+<script src="/config.js"></script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
+import {
+  getFirestore,
+  collection,
+  query,
+  where,
+  getDocs,
+  addDoc,
+  doc,
+  getDoc,
+  updateDoc,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
+
+const firebaseConfig = window.firebaseConfig;
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const cards = document.getElementById("cards");
+
 const params = new URLSearchParams(window.location.search);
 const deptFromQuery = params.get("department");
 
 if (deptFromQuery) {
-    document.getElementById("departmentSelect").value = deptFromQuery;
-    loadHospitals();
+  document.getElementById("departmentSelect").value = deptFromQuery;
+  loadHospitals();
 } else {
-    loadHospitals();
+  loadHospitals();
 }
 
-// Load hospitals from backend API
 async function loadHospitals() {
-    let dept = document.getElementById("departmentSelect").value;
-    let url = dept 
-      ? `http://localhost:3000/api/hospitals?department=${dept}`
-      : `http://localhost:3000/api/hospitals`;
+  const dept = document.getElementById("departmentSelect").value;
+  cards.innerHTML = "Loading...";
 
-    const box = document.getElementById("cards");
-    box.innerHTML = "Loading...";
-
-    try {
-        const response = await fetch(url);
-        const data = await response.json();
-        box.innerHTML = "";
-
-        if (data.length === 0) {
-            box.innerHTML = "<p>No hospitals found for this department.</p>";
-            return;
-        }
-
-        data.forEach(h => {
-            const div = document.createElement("div");
-            div.className = "card";
-            div.onclick = () => openHospital(h);
-
-            div.innerHTML = `
-                <h3>${h["hospital name"]}</h3>
-                <div class="small">${h["hospital address"]}</div>
-                <div class="row" style="margin-top:10px">
-                    <span class="badge">${h["department"]}</span>
-                    <div class="small">Rating: ⭐ Not yet rated</div>
-                </div>
-                <div class="small">Contact: ${h["contact number"]}</div>
-            `;
-            box.appendChild(div);
-        });
-    } catch (err) {
-        console.error("Error loading hospitals:", err);
-        box.innerHTML = "<p>Error loading hospitals. Please try again.</p>";
+  try {
+    let hospitalsQuery;
+    if (dept) {
+      hospitalsQuery = query(collection(db, "hospitals"), where("department", "==", dept));
+    } else {
+      hospitalsQuery = collection(db, "hospitals");
     }
+
+    const snapshot = await getDocs(hospitalsQuery);
+    cards.innerHTML = "";
+
+    if (snapshot.empty) {
+      cards.innerHTML = `<p>No hospitals found for department: ${dept}</p>`;
+      return;
+    }
+
+    snapshot.forEach(docSnap => {
+      const hospital = { id: docSnap.id, ...docSnap.data() };
+      const div = document.createElement("div");
+      div.className = "card";
+      div.onclick = () => openHospital(hospital);
+      const ratingText = hospital.ratingAverage ? `${hospital.ratingAverage.toFixed(1)} (${hospital.ratingCount || 0})` : "Not yet rated";
+
+      div.innerHTML = `
+        <h3>${hospital.name}</h3>
+        <div class="small">${hospital.address}</div>
+        <div class="row" style="margin-top:10px">
+          <span class="badge">${hospital.department}</span>
+          <div class="small">Rating: ⭐ ${ratingText}</div>
+        </div>
+        <div class="small">Contact: ${hospital.contact || "N/A"}</div>
+      `;
+      cards.appendChild(div);
+    });
+  } catch (error) {
+    console.error("Error loading hospitals:", error);
+    cards.innerHTML = "<p>Error loading hospitals. Please try again.</p>";
+  }
 }
 
-/* ---------------- POPUP ---------------- */
-function openHospital(h) {
-  const mapLink = h.latitude && h.longitude
-    ? `https://www.google.com/maps/dir/?api=1&origin=My+Location&destination=${h.latitude},${h.longitude}`
-    : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(h["hospital address"])}`;
-
-  const bookedTokens = Math.floor(1 + Math.random()*10);
+function openHospital(hospital) {
+  const mapLink = hospital.lat && hospital.lon
+    ? `https://www.google.com/maps/dir/?api=1&origin=My+Location&destination=${hospital.lat},${hospital.lon}`
+    : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(hospital.address)}`;
 
   const pop = document.createElement("div");
   pop.className = "popup";
+  const ratingText = hospital.ratingAverage ? `${hospital.ratingAverage.toFixed(1)} (${hospital.ratingCount || 0})` : "Not yet rated";
 
   pop.innerHTML = `
     <div class="popup-inner">
-      <h2>${h["hospital name"]}</h2>
-      <div class="small">${h["hospital address"]}</div>
-      <div class="small">Department : ${h["department"]}</div>
-      <div class="small">Contact : <a href="tel:${h["contact number"]}">${h["contact number"]}</a></div>
-      <div class="small">Already booked tokens : <b>${bookedTokens}</b></div>
+      <h2>${hospital.name}</h2>
+      <div class="small">${hospital.address}</div>
+      <div class="small">Department: ${hospital.department}</div>
+      <div class="small">Contact: <a href="tel:${hospital.contact}">${hospital.contact || "N/A"}</a></div>
+      <div class="small">Rating: ⭐ ${ratingText}</div>
       <br>
       <a href="${mapLink}" target="_blank">📍 See Directions from Your Location</a>
-
-      <!-- 🔥 UPDATED BUTTON -->
-      <button onclick="saveAndBook('${h["hospital name"]}','${h["department"]}','${h["hospital address"]}','${h["contact number"]}')">
-        Select Slot ➡️
-      </button>
-
+      <button onclick="bookToken('${hospital.id}','${hospital.name.replace(/'/g, "\\'")}','${hospital.department.replace(/'/g, "\\'")}','${hospital.address.replace(/'/g, "\\'")}')">Book token</button>
       <div style="margin-top:10px">
         <span class="small">Rate this hospital:</span><br>
-        <div class="stars">
-          <span onclick="highlightStars(this,1)">★</span>
-          <span onclick="highlightStars(this,2)">★</span>
-          <span onclick="highlightStars(this,3)">★</span>
-          <span onclick="highlightStars(this,4)">★</span>
-          <span onclick="highlightStars(this,5)">★</span>
+        <div class="stars" id="stars">
+          <span onclick="highlightStars(this,1,'${hospital.id}')">★</span>
+          <span onclick="highlightStars(this,2,'${hospital.id}')">★</span>
+          <span onclick="highlightStars(this,3,'${hospital.id}')">★</span>
+          <span onclick="highlightStars(this,4,'${hospital.id}')">★</span>
+          <span onclick="highlightStars(this,5,'${hospital.id}')">★</span>
         </div>
       </div>
-
       <button class="close-btn" onclick="this.closest('.popup').remove()">Close</button>
     </div>
   `;
+
   document.body.appendChild(pop);
 }
 
-/* 🔥 NEW FUNCTION: SAVE BOOKING */
-function saveAndBook(hospital, department, address, contact) {
+async function bookToken(hospitalId, hospitalName, department, address) {
+  try {
+    const tokenNumber = `T${Date.now().toString().slice(-6)}`;
+    const waitMinutes = Math.floor(Math.random() * 25) + 5;
 
-  let bookings = JSON.parse(localStorage.getItem("bookings") || "[]");
+    await addDoc(collection(db, "bookings"), {
+      hospitalId,
+      hospitalName,
+      department,
+      tokenNumber,
+      status: "booked",
+      waitMinutes,
+      createdAt: serverTimestamp()
+    });
 
-  let now = new Date();
-
-  let booking = {
-    hospital: hospital,
-    dept: department,
-    date: now.toLocaleDateString(),
-    time: now.toLocaleTimeString(),
-    token: "T" + Math.floor(100 + Math.random()*900)
-  };
-
-  bookings.push(booking);
-
-  localStorage.setItem("bookings", JSON.stringify(bookings));
-
-  // Continue normal flow
-  window.location = `book_token.html?hospital=${encodeURIComponent(hospital)}&department=${encodeURIComponent(department)}&address=${encodeURIComponent(address)}&contact=${encodeURIComponent(contact)}`;
+    window.location = `book_token.html?hospital=${encodeURIComponent(hospitalName)}&department=${encodeURIComponent(department)}&address=${encodeURIComponent(address)}&token=${encodeURIComponent(tokenNumber)}&wait=${waitMinutes}`;
+  } catch (error) {
+    console.error("Booking error:", error);
+    alert("Unable to book token. Please try again.");
+  }
 }
 
-/* ---------------- RATE HOSPITAL ---------------- */
-function highlightStars(el, rating){
+function highlightStars(el, rating, hospitalId) {
   const stars = el.parentNode.querySelectorAll("span");
-  stars.forEach((s,i)=> s.classList.toggle("active", i < rating));
-  alert("Thanks for rating! You gave " + rating + " stars.");
+  stars.forEach((s, i) => s.classList.toggle("active", i < rating));
+  rateHospital(hospitalId, rating);
 }
+
+async function rateHospital(hospitalId, rating) {
+  try {
+    const hospitalRef = doc(db, "hospitals", hospitalId);
+    const hospitalSnap = await getDoc(hospitalRef);
+    if (!hospitalSnap.exists()) {
+      alert("Hospital not found.");
+      return;
+    }
+    const hospitalData = hospitalSnap.data();
+    const oldCount = hospitalData.ratingCount || 0;
+    const oldAvg = hospitalData.ratingAverage || 0;
+    const newCount = oldCount + 1;
+    const newAvg = ((oldAvg * oldCount) + rating) / newCount;
+
+    await addDoc(collection(db, "ratings"), {
+      hospitalId,
+      rating,
+      createdAt: serverTimestamp()
+    });
+
+    await updateDoc(hospitalRef, {
+      ratingAverage: newAvg,
+      ratingCount: newCount
+    });
+
+    alert("Thanks for rating! Your rating has been recorded.");
+  } catch (error) {
+    console.error("Rating error:", error);
+    alert("Unable to save rating. Please try again.");
+  }
+}
+
+window.loadHospitals = loadHospitals;
+window.bookToken = bookToken;
+window.highlightStars = highlightStars;
 </script>
 </body>
 </html>

@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Hospitals Near You</title>
+
+<style>
+body{
+    margin:0;
+    font-family: Arial, sans-serif;
+    background: linear-gradient(120deg,#e8f4ff,#fefae0);
+}
+h1{
+    text-align:center;
+    padding:30px 0 10px;
+}
+.container{
+    width:900px;
+    max-width:95%;
+    margin:auto;
+    padding-bottom:50px;
+}
+.card{
+    background:white;
+    border-radius:14px;
+    padding:18px 22px;
+    margin:18px 0;
+    box-shadow:0 10px 25px rgba(0,0,0,0.08);
+    cursor:pointer;
+    transition:0.2s;
+}
+.card:hover{ transform:scale(1.02); }
+.card h3{ margin:0 0 6px 0; }
+.small{ color:#555; font-size:14px; }
+.row{ display:flex; justify-content:space-between; align-items:center; }
+.badge{
+    background:#2563eb; color:white;
+    padding:6px 12px; border-radius:20px; font-size:13px;
+}
+/* popup */
+.popup{
+  position:fixed; inset:0;
+  background:rgba(0,0,0,.45);
+  display:flex; align-items:center; justify-content:center;
+  z-index:1000;
+}
+.popup-inner{
+  width:360px; background:white; padding:20px;
+  border-radius:14px; box-shadow:0 20px 40px rgba(0,0,0,.2);
+}
+.popup-inner h2{ margin-top:0; }
+.popup-inner button{
+  width:100%; padding:10px; margin-top:10px;
+  border:none; border-radius:8px;
+  background:#2563eb; color:white; cursor:pointer;
+}
+.popup-inner .close-btn{ background:#eee; color:#333; }
+/* back button */
+.back-btn{
+  display:block; margin:20px auto; padding:10px 20px;
+  background:#2563eb; color:white; border:none;
+  border-radius:8px; cursor:pointer;
+}
+/* star rating */
+.stars span {
+  font-size:24px; cursor:pointer; color:#ccc;
+}
+.stars span.active { color:#f5b301; }
+</style>
+</head>
+
+<body>
+
+<h1>Hospitals Near You</h1>
+
+<div style="text-align:center;margin-bottom:20px;">
+  <select id="departmentSelect">
+    <option value="Cardiology">Cardiology</option>
+    <option value="Neurology">Neurology</option>
+    <option value="Orthopaedics">Orthopaedics</option>
+    <option value="Pediatrics">Pediatrics</option>
+    <option value="Emergency">Emergency</option>
+    <option value="ENT">ENT</option>
+    <option value="Dermatology">Dermatology</option>
+    <option value="Oncology">Oncology</option>
+    <option value="Gynaecology">Gynaecology</option>
+    <option value="General Medicine">General Medicine</option>
+    <option value="Ophthalmology">Ophthalmology</option>
+    <option value="Pulmonology">Pulmonology</option>
+    <option value="Gastroenterology">Gastroenterology</option>
+    <option value="Urology">Urology</option>
+    <option value="Psychiatry">Psychiatry</option>
+    <option value="Obstetrics">Obstetrics</option>
+    <option value="Neonatology">Neonatology</option>
+    <option value="Dental Care">Dental Care</option>
+    <option value="Physician">Physician</option>
+  </select>
+  <button onclick="loadHospitals()">Search</button>
+</div>
+
+<div class="container" id="cards">Loading...</div>
+
+<button class="back-btn" onclick="window.location='sector.html'">⬅ Back to Department Selection</button>
+
+<script>
+const box = document.getElementById("cards");
+
+// Read department from query string
+const params = new URLSearchParams(window.location.search);
+const deptFromQuery = params.get("department");
+
+// If query param exists, set dropdown value and load hospitals
+if (deptFromQuery) {
+    document.getElementById("departmentSelect").value = deptFromQuery;
+    loadHospitals();
+} else {
+    loadHospitals();
+}
+
+// Load hospitals for selected department
+function loadHospitals() {
+    let dept = document.getElementById("departmentSelect").value;
+    fetch(`/hospitals/by_department?department=${encodeURIComponent(dept)}`)
+        .then(r => r.json())
+        .then(data => {
+            box.innerHTML = "";
+
+            if (!data || data.length === 0 || data.error) {
+                box.innerHTML = `<p style="color:red">${data.error || "No hospitals found for department: " + dept}</p>`;
+                return;
+            }
+
+            data.forEach(h => {
+                const div = document.createElement("div");
+                div.className = "card";
+                div.onclick = () => openHospital(h);
+
+                div.innerHTML = `
+                    <h3>${h.hospital}</h3>
+                    <div class="small">${h.address}</div>
+                    <div class="row" style="margin-top:10px">
+                        <span class="badge">${h.department}</span>
+                        <div class="small">Rating: ⭐ ${h.rating || "Not yet rated"}</div>
+                    </div>
+                `;
+                box.appendChild(div);
+            });
+        })
+        .catch(err => {
+            box.innerHTML = "Error loading hospitals";
+            console.log(err);
+        });
+}
+
+/* ---------------- POPUP ---------------- */
+function openHospital(h) {
+  const mapLink = h.lat && h.lon
+    ? `https://www.google.com/maps/dir/?api=1&origin=My+Location&destination=${h.lat},${h.lon}`
+    : `https://www.google.com/maps/dir/?api=1&origin=My+Location&destination=${encodeURIComponent(h.address)}`;
+
+  fetch(`/token/info?hospital=${encodeURIComponent(h.hospital)}&department=${encodeURIComponent(h.department)}`)
+  .then(r => r.json())
+  .then(info => {
+    const pop = document.createElement("div");
+    pop.className = "popup";
+
+    pop.innerHTML = `
+      <div class="popup-inner" id="popupBox">
+        <h2>${h.hospital}</h2>
+        <div class="small">${h.address}</div>
+        <div class="small">Department : ${h.department}</div>
+        <div class="small">Already booked tokens : <b>${info.already_booked}</b></div>
+        <br>
+        <a href="${mapLink}" target="_blank">📍 See Directions from Your Location</a>
+        <button onclick="bookToken('${h.hospital}','${h.department}','${h.address}')">Book token</button>
+        <div style="margin-top:10px">
+          <span class="small">Rate this hospital:</span><br>
+          <div class="stars" id="stars">
+            <span onclick="highlightStars(this,1,'${h.hospital}')">★</span>
+            <span onclick="highlightStars(this,2,'${h.hospital}')">★</span>
+            <span onclick="highlightStars(this,3,'${h.hospital}')">★</span>
+            <span onclick="highlightStars(this,4,'${h.hospital}')">★</span>
+            <span onclick="highlightStars(this,5,'${h.hospital}')">★</span>
+          </div>
+        </div>
+        <button class="close-btn" onclick="this.closest('.popup').remove()">Close</button>
+      </div>
+    `;
+    document.body.appendChild(pop);
+  });
+}
+
+/* ---------------- BOOK TOKEN ---------------- */
+function bookToken(hospital, department, address) {
+  fetch("/token/book", {
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body:JSON.stringify({ hospital:hospital, department:department })
+  })
+  .then(r => r.json())
+  .then(d => {
+    window.location = `confirmation.html?hospital=${encodeURIComponent(hospital)}&department=${encodeURIComponent(department)}&token=${d.token_number}&wait=${d.waiting_minutes}&address=${encodeURIComponent(address)}`;
+  });
+}
+
+/* ---------------- RATE HOSPITAL ---------------- */
+function highlightStars(el, rating, hospital) {
+  const stars = el.parentNode.querySelectorAll("span");
+  stars.forEach((s, i) => {
+    if(i < rating) { s.classList.add("active"); }
+    else { s.classList.remove("active"); }
+  });
+  rateHospital(hospital, rating);
+}
+
+function rateHospital(hospital, rating) {
+  fetch("/hospital/rate", {
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body:JSON.stringify({ hospital:hospital, rating:rating })
+  })
+  .then(r => r.json())
+  .then(d => {
+    alert("Thanks for rating! Current average: " + d.average_rating + " ⭐");
+  });
+}
